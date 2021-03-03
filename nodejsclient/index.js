@@ -1,9 +1,11 @@
 //ref: https://github.com/GoogleCloudPlatform/nodejs-docs-samples/blob/master/iot/mqtt_example/cloudiot_mqtt_example_nodejs.js
+//new link:  https://github.com/googleapis/nodejs-iot/blob/master/samples/mqtt_example/cloudiot_mqtt_example_nodejs.js
 
 'use strict';
 
 // [START iot_mqtt_include]
 const fs = require('fs');
+//const {readFileSync} = require('fs');
 const jwt = require('jsonwebtoken');
 const mqtt = require('mqtt');
 // [END iot_mqtt_include]
@@ -159,6 +161,7 @@ const mqttDeviceDemo = (
     deviceId,
     algorithm,
     privateKeyFile,
+    serverCertFile,
     numMessages
 ) => {
     // [START iot_mqtt_run]
@@ -169,6 +172,7 @@ const mqttDeviceDemo = (
     const region = `us-central1`;
     //const algorithm = `RS256`;
     // const privateKeyFile = `./rsa_private.pem`;
+    //const serverCertFile = `/Users/lkk/Documents/GoogleCloud/certs/roots.pem`;
     const mqttBridgeHostname = `mqtt.googleapis.com`;
     const mqttBridgePort = 8883;
     const messageType = `events`;
@@ -190,6 +194,7 @@ const mqttDeviceDemo = (
         password: createJwt(projectId, privateKeyFile, algorithm),
         protocol: 'mqtts',
         secureProtocol: 'TLSv1_2_method',
+        ca: [fs.readFileSync(serverCertFile)],
     };
 
     // Create a client, and connect to the Google MQTT bridge.
@@ -266,18 +271,28 @@ const mqttDeviceDemo = (
 const { argv } = require(`yargs`)
     .options({
         deviceId: {
+            default: 'cmpe181dev1',
             description: 'Cloud IoT device ID.',
             requiresArg: true,
             demandOption: true,
             type: 'string',
         },
         privateKeyFile: {
+            default: '../../certs/cmpe181dev1/rsa_private.pem',
             description: 'Path to private key file.',
             requiresArg: true,
             demandOption: true,
             type: 'string',
         },
+        serverCertFile: {
+            default: '../../certs/roots.pem',
+            description: 'Path to root pem file.',
+            requiresArg: true,
+            demandOption: true,
+            type: 'string',
+        },
         algorithm: {
+            default: 'RS256',
             description: 'Encryption algorithm to generate the JWT.',
             requiresArg: true,
             demandOption: true,
@@ -301,8 +316,12 @@ const { argv } = require(`yargs`)
                 opts.deviceId,
                 opts.algorithm,
                 opts.privateKeyFile,
+                opts.serverCertFile,
                 opts.numMessages
             );
         }
     )
     .strict();
+
+//Usage: % node index.js mqttDeviceDemo
+//Usage: node index.js mqttDeviceDemo --deviceId=cmpe181dev1  --privateKeyFile=../certs/cmpe181dev1/rsa_private.pem --numMessages=25 --algorithm=RS256
