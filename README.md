@@ -7,6 +7,7 @@ Use the following code to run the IoT python client to connect to Google Cloud I
 ```bash
 python3 pyclient/IoTclient.py
 ```
+Notebook/CMPE-GoogleIoTdata.ipynb is the Colab file to demonstrate the IoT Python code that publish IoT sensor data to Google Cloud IoT
 
 ## IoT Nodejs Client
 Use the following code to run the IoT nodejs client to connect to Google Cloud IoT, you can add arguments in the command line or change the default arguments in the code
