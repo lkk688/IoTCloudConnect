@@ -168,7 +168,7 @@ def cloudstorage_demo(args):
             blobexist.upload_from_filename(filename)
 
             # Process network events.
-            client.loop()
+            #client.loop()
 
             continue
         else:
