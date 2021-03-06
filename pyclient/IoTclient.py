@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#ref: https://github.com/googleapis/python-iot
 
 from google.cloud import storage
 
@@ -382,6 +383,38 @@ def bigquery_mqtt_device_demo(args):
         # Send events every second. State should not be updated as often
         time.sleep(0.5)
 
+def mqtt_device_subdemo(args):
+
+    """Connects a device, sends data, and receives data."""
+    # [START iot_mqtt_run]
+    global minimum_backoff_time
+    global MAXIMUM_BACKOFF_TIME
+
+    # Publish to the events or state topic based on the flag.
+    sub_topic = 'events' if args.message_type == 'event' else 'state'
+
+    mqtt_topic = '/devices/{}/{}'.format(args.device_id, sub_topic)
+
+    jwt_iat = datetime.datetime.utcnow()
+    jwt_exp_mins = args.jwt_expires_minutes
+    client = get_client(
+        args.project_id, args.cloud_region, args.registry_id,
+        args.device_id, args.private_key_file, args.algorithm,
+        args.ca_certs, args.mqtt_bridge_hostname, args.mqtt_bridge_port)
+    
+    # Instantiates a google cloud client
+    # Instantiates a client
+    #storage_client = storage.Client.from_service_account_json(args.service_account_json)
+    #bucketexist = storage_client.bucket('cmpelkk_imagetest')
+
+    i = 0
+    for i in range(1, args.num_messages + 1):
+        
+        client.loop()
+
+        # Send events every second. State should not be updated as often
+        time.sleep(1)
+
 class Args:
   algorithm = 'RS256'
   ca_certs = '/Users/lkk/Documents/GoogleCloud/certs/roots.pem' #'/content/gdrive/"My Drive"/CurrentWork/CMPE181Sp2020/Googlecerts/roots.pem'
@@ -407,7 +440,8 @@ def main():
     args=Args()
     #cloudstorage_demo(args)
     #storage_mqtt_device_demo(args)
-    bigquery_mqtt_device_demo(args)
+    #bigquery_mqtt_device_demo(args)
+    mqtt_device_subdemo(args)
     print('Finished.')
 
 

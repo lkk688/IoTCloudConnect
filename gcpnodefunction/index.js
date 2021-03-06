@@ -72,77 +72,126 @@ const escapeHtml = require('escape-html');
  * @param {Object} res Cloud Function response context.
  *                     More info: https://expressjs.com/en/api.html#res
  */
-exports.httpApi = (req, res) => {
-    const id = req.query.id;//req.params.id;
-    console.log(`Get http query:, ${id}`);
+exports.httpApi = async (req, res) => {
+    console.log('request body-> ', req.body);
     let bodydata;
+    let deviceId;
+    let message;
 
     switch (req.get('content-type')) {
-        // '{"name":"John"}'
+        // '{"deviceId":"testiot1","message":"test message"}'
         case 'application/json':
-            ({ bodydata } = req.body);
-            console.log("json content", JSON.stringify(bodydata));
+            //({ bodydata } = req.body);
+            //console.log("json content", JSON.stringify(bodydata));
+            console.log("json content", req.body)
+            //const {deviceId, message} = req.body;
+            deviceId=req.body.deviceId
+            message=req.body.message
+            console.log("deviceId:", deviceId)
+            console.log("message:", message)
             break;
 
-        // 'John', stored in a Buffer
+        // 'message', stored in a Buffer
         case 'application/octet-stream':
-            bodydata = req.body.toString(); // Convert buffer to a string
+            message = req.body.toString(); // Convert buffer to a string
             break;
 
-        // 'John'
+        // 'message'
         case 'text/plain':
-            bodydata = req.body;
+            message = req.body;
             break;
 
-        // 'name=John' in the body of a POST request (not the URL)
+        // 'message=xx' in the body of a POST request (not the URL)
         case 'application/x-www-form-urlencoded':
-            ({ bodydata } = req.body);
+            ({ message } = req.body);
             break;
     }
-    //bodydata =req.body
-    if (bodydata) {
-        console.log(`Get body query:, ${bodydata}`);
-    } else {
-        bodydata = req.body ? req.body : 'nobody';
-        console.log(`No body query: ${bodydata}`);
-        console.log(bodydata);
-    }
+
     switch (req.method) {
         case 'GET':
-            const datalist = [];
-            db.collection(dbcollection).get()
-                .then((snapshot) => {
-                    snapshot.forEach((doc) => {
-                        console.log(doc.id, '=>', doc.data());
-                        datalist.push({
-                            id: doc.id,
-                            data: doc.data()
+            deviceId = req.query.id;
+            console.log(`Get http query:, ${deviceId}`);
+            if (!deviceId || deviceId.length === 0) {
+                //read all data from the firestore
+                const datalist = [];
+                db.collection(dbcollection).get()
+                    .then((snapshot) => {
+                        snapshot.forEach((doc) => {
+                            console.log(doc.id, '=>', doc.data());
+                            datalist.push({
+                                id: doc.id,
+                                data: doc.data()
+                            });
                         });
+                        res.status(200).send(datalist);
+                    })
+                    .catch((err) => {
+                        console.log('Error getting documents', err);
+                        res.status(405).send('Error getting data');
                     });
-                    res.status(200).send(datalist);
-                })
-                .catch((err) => {
-                    console.log('Error getting documents', err);
-                    res.status(405).send('Error getting data');
-                });
+            }else{
+                let dbRef = db.collection(dbcollection).doc(deviceId);
+                let getDoc = dbRef.get()
+                    .then(doc => {
+                        if (!doc.exists) {
+                            res.status(400).send('No such document!');
+                            console.log('No such document!');
+                            return;
+                        } else {
+                            res.status(200).send(doc.data());
+                            console.log('Document data:', doc.data());
+                            return;
+                        }
+                    })
+                    .catch(err => {
+                        console.log('Error getting document', err);
+                        res.status(405).send('Error getting document', err);
+                        return;
+                    });
+            }
+            
             //res.status(200).send('Get request!');
             break;
         case 'POST':
-            let docRef = db.collection(dbcollection).doc(id);
-            console.log('POST Created doc ref');
-            let setdoc = docRef.set({
-                name: id,
-                sensors: bodydata,
-                time: new Date()
-            });
-            //res.status(200).send('Get Post request!');
-            //sendCommand('cmpe181dev1', 'CMPEIoT1', 'cmpelkk', 'us-central1', 'test command');
-            //res.status(200).send(`Post data: ${escapeHtml(bodydata || 'World')}!`);
-            res.status(200).json({
-                name: id,
-                sensors: bodydata,
-                time: new Date()
-            })
+            if (!deviceId || deviceId.length === 0) {
+                console.log('No deviceId')
+            }else{
+                console.log('POST Method, deviceId: ', deviceId || 'cmpe181dev1');
+                const iotcommandOptions = {
+                    deviceId: deviceId || 'cmpe181dev1', //'cmpe181dev1',
+                    commandMessage: message,
+                    projectId: 'cmpelkk',
+                    cloudRegion: 'us-central1',
+                    registryId: 'CMPEIoT1'
+                }
+                try {
+                    const response = await sendCommand(iotcommandOptions);
+                    res.status(200).json(response);
+                } catch(err) {
+                    console.error('Publish failed ', err.message);
+                    res.status(400).json({
+                        error: err.message
+                    });
+                }
+            }
+            
+            
+            // sendCommand('cmpe181dev1', 'CMPEIoT1', 'cmpelkk', 'us-central1', 'test command');
+            // res.status(200).send('Get Post request, send command!');
+            
+            // let docRef = db.collection(dbcollection).doc(id);
+            // console.log('POST Created doc ref');
+            // let setdoc = docRef.set({
+            //     name: id,
+            //     sensors: bodydata,
+            //     time: new Date()
+            // });
+            // //res.status(200).send(`Post data: ${escapeHtml(bodydata || 'World')}!`);
+            // res.status(200).json({
+            //     name: id,
+            //     sensors: bodydata,
+            //     time: new Date()
+            // })
             break;
         case 'PUT':
             let docdelRef = db.collection(dbcollection).doc(id);
@@ -174,3 +223,49 @@ exports.httpApi = (req, res) => {
     //res.send(`Hello ${escapeHtml(req.query.name || req.body.name || 'World')}!`);
 };
 
+//ref: https://cloud.google.com/iot/docs/how-tos/commands#api
+const sendCommand = async (
+    {
+        deviceId,
+        registryId,
+        projectId,
+        cloudRegion,
+        commandMessage
+      }
+) => {
+    // [START iot_send_command]
+    // const cloudRegion = 'us-central1';
+    // const deviceId = 'my-device';
+    // const commandMessage = 'message for device';
+    // const projectId = 'adjective-noun-123';
+    // const registryId = 'my-registry';
+    const iot = require('@google-cloud/iot');
+    const iotClient = new iot.v1.DeviceManagerClient({
+        // optional auth parameters.
+    });
+
+    const formattedName = iotClient.devicePath(
+        projectId,
+        cloudRegion,
+        registryId,
+        deviceId
+    );
+    const binaryData = Buffer.from(commandMessage);
+    const request = {
+        name: formattedName,
+        binaryData: binaryData,
+    };
+
+    try {
+        const responses = await iotClient.sendCommandToDevice(request);
+        console.log('Sent command: ', responses[0]);
+        return {
+            message: 'Sent message',
+            content: responses[0]
+        };
+    } catch (err) {
+        console.error('Could not send command:', err);
+        throw new Error('Could not send command');
+    }
+    // [END iot_send_command]
+};
