@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid');
 //ref: https://github.com/googleapis/nodejs-firestore
 const Firestore = require('@google-cloud/firestore');
 // const db = new Firestore({
@@ -59,7 +60,45 @@ exports.iotPubSubBQ = async (data, context) => {
         .catch((err) => {
             console.error('Bigquery ERROR:', err);
         });
-    };
+    
+    //Inserts data into Firestore db
+    //const document = db.doc(`iottests/${iotdata.device_id}`);
+        //  "Hello, {"registry_id": "CMPEIoT1", "device_id": "cmpe181dev1", "timecollected": "2020-04-27 02:00:21", "zipcode": "94043", "latitude": "37.421655", "longitude": "-122.085637", "temperature": "25.15", "humidity": "78.93", "image_file": "img9.jpg"}!"   
+    //console.log(iotdata.device_id);
+    let dbcol = 'iotnewdata';
+    // Add a new document with a generated id.
+    let addDoc = db.collection(dbcol).add({
+        registry_id: iotdata.registry_id,
+        device_id: iotdata.device_id,
+        'timecollected': iotdata.timecollected,
+        'zipcode': iotdata.zipcode,
+        'latitude': iotdata.latitude,
+        'longitude': iotdata.longitude,
+        'temperature': iotdata.temperature,
+        'humidity': iotdata.humidity,
+        'image_file': iotdata.image_file
+    }).then(ref => {
+        console.log('Added document with ID: ', iotdata.device_id);
+    });
+
+    console.log("iotonedata collection, device id: ", iotdata.device_id);
+    try {
+        //db.collection('iotnewdata').doc("cmpe181dev1").set
+        db.collection('iotonedata').doc(iotdata.device_id).set({
+            'timecollected': iotdata.timecollected,
+            'zipcode': iotdata.zipcode,
+            'latitude': iotdata.latitude,
+            'longitude': iotdata.longitude,
+            'temperature': iotdata.temperature,
+            'humidity': iotdata.humidity,
+            'image_file': iotdata.image_file
+          });
+        console.log(`State updated for ${iotdata.device_id}`);
+    } catch (error) {
+        console.error(error);
+    }
+};
+
 
 
 const escapeHtml = require('escape-html');

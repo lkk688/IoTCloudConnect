@@ -36,7 +36,7 @@ Write the [index.js](/gcpnodefunction/index.js) code inside the gcpnodefunction 
 ```bash
 gcpnodefunction % gcloud functions deploy iotPubSubBQ --runtime nodejs10 --trigger-topic cmpeiotdevice1
 ```
-iotPubSubBQ will parse the received sensor data (json format) and send the data to BigQuery (you need to create the BigQuery dataset and table with schema first)
+iotPubSubBQ will parse the received sensor data (json format) and send the data to BigQuery (you need to create the BigQuery dataset and table with schema first) and firestore
 
 2. Run the following code to deploy the HTTP based cloud function. HTTP message will trigger this cloud function
 ```bash
