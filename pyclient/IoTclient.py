@@ -440,8 +440,8 @@ def main():
     args=Args()
     #cloudstorage_demo(args)
     #storage_mqtt_device_demo(args)
-    bigquery_mqtt_device_demo(args)
-    #mqtt_device_subdemo(args)
+    #bigquery_mqtt_device_demo(args)
+    mqtt_device_subdemo(args)
     print('Finished.')
 
 

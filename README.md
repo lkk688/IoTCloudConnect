@@ -36,9 +36,32 @@ Write the [index.js](/gcpnodefunction/index.js) code inside the gcpnodefunction 
 ```bash
 gcpnodefunction % gcloud functions deploy iotPubSubBQ --runtime nodejs10 --trigger-topic cmpeiotdevice1
 ```
-iotPubSubBQ will parse the received sensor data (json format) and send the data to BigQuery (you need to create the BigQuery dataset and table with schema first) and firestore
+iotPubSubBQ will parse the received sensor data (json format) and send the data to BigQuery (you need to create the BigQuery dataset and table with schema first) and the two collections of firestore (one for latest data and one for all data)
 
-2. Run the following code to deploy the HTTP based cloud function. HTTP message will trigger this cloud function
+2. Using the following command line to test the send command to IoT devices
+```bash
+% gcloud iot devices commands send \
+    --command-data='test iot1' \   
+    --region=us-central1  \
+    --registry=CMPEIoT1 \   
+    --device=cmpe181dev1
+```
+You will received the print out from the IoT device side "Received message 'test iot1' on topic '/devices/cmpe181dev1/commands' with Qos 0"
+
+Deploy the "IoTdeviceHTTPApi" cloud funtion to send command to iot device via HTTP POST
+```bash
+(myenv) lkk@kaikais-mbp2019 gcpnodefunction % gcloud functions deploy IoTdeviceHTTPApi --runtime nodejs10 --trigger-http
+```
+You can check the HTTP api (url address) via
+```bash
+gcloud functions describe IoTdeviceHTTPApi
+```
+Using the following curl POST command to test the send command to IoT devices (make sure your IoT device is running)
+```bash
+% curl -X POST https://us-central1-cmpelkk.cloudfunctions.net/IoTdeviceHTTPApi -H "Content-Type:application/json" -d '{"deviceId":"cmpe181dev1","message":"test message"}'
+```
+
+3. Run the following code to deploy the HTTP based cloud function. HTTP message will trigger this cloud function
 ```bash
 gcpnodefunction %gcloud functions deploy httpApi --runtime nodejs10 --trigger-http
 ```
@@ -58,19 +81,4 @@ If you add the id in the HTTP get query (add "?id=testsensor06" into the URL), y
 No such document!
 % curl -X GET 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=testsensor06'
 {"time":{"_seconds":1587509932,"_nanoseconds":457000000},"name":"testsensor06","sensors":{"sensor":"humidity","value":99}}%
-```
-3. Using the following command line to test the send command to IoT devices
-```bash
-% gcloud iot devices commands send \
-    --command-data='test iot1' \   
-    --region=us-central1  \
-    --registry=CMPEIoT1 \   
-    --device=cmpe181dev1
-```
-You will received the print out from the IoT device side "Received message 'test iot1' on topic '/devices/cmpe181dev1/commands' with Qos 0"
-
-Using the following curl POST command to test the send command to IoT devices
-```bash
-% curl -X POST https://us-central1-cmpelkk.cloudfunctions.net/httpApi -H "Content-Type:text/plain" -d 'test now'
-Get Post request, send command!% 
 ```
