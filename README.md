@@ -3,6 +3,10 @@ This sample code implements the IoT client device connection with the cloud, and
 ![Figure](/Resources/Picture1.png)
 
 ## IoT Python Client
+Activate the python virtual environment, install the required Python packages based on the [requirements](/iotpython/requirements.txt)
+```bash
+(myenv) lkk@kaikais-mbp2019 iotpython % pip install -r requirements.txt
+```
 Use the following code to run the IoT python client to connect to Google Cloud IoT, you need to add your connection parameters in class Args or enable command line argument parsing by uncomment: args = parse_command_line_args()
 ```bash
 python3 pyclient/IoTclient.py
