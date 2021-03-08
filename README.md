@@ -32,6 +32,8 @@ python pyclient/sub.py $PROJECT my-subscription
 
 ## Google Cloud Function
 Write the [index.js](/gcpnodefunction/index.js) code inside the gcpnodefunction folder, then deploy the cloud function to the Google Cloud.
+
+### IoT Device connection and data store
 1. Run the following code to deploy the IoT pubsub functions to the Cloud Function, the trigger will be the Pubsub topic, whenever the pubsub received the data from the IoT client, this Pubsub topic will trigger this google cloud function
 ```bash
 gcpnodefunction % gcloud functions deploy iotPubSubBQ --runtime nodejs10 --trigger-topic cmpeiotdevice1
@@ -61,7 +63,8 @@ Using the following curl POST command to test the send command to IoT devices (m
 % curl -X POST https://us-central1-cmpelkk.cloudfunctions.net/IoTdeviceHTTPApi -H "Content-Type:application/json" -d '{"deviceId":"cmpe181dev1","message":"test message"}'
 ```
 
-3. Run the following code to deploy the HTTP based cloud function. HTTP message will trigger this cloud function
+### HTTP Backend
+Add the httpApi in [index.js](/gcpnodefunction/index.js) code, write the REST API, add create, read, update, and delete (CRUD) note to Firestore database. Run the following code to deploy the HTTP based cloud function. HTTP message will trigger this cloud function
 ```bash
 gcpnodefunction %gcloud functions deploy httpApi --runtime nodejs10 --trigger-http
 ```
@@ -69,16 +72,36 @@ You can check the HTTP api (url address) via
 ```bash
 gcloud functions describe httpApi
 ```
-Using the following curl command to test the HTTP GET api to read all sensor data:
+1. Using the following curl command to test the HTTP GET api to read all sensor data:
 ```bash
 % curl -X GET https://us-central1-cmpelkk.cloudfunctions.net/httpApi -H "Content-Type:application/json"
 
-[{"id":"testiot","data":{"value":"75","number":"2020","sensor":"temperature"}},{"id":"testsensor03","data":{"time":{"_seconds":1587500474,"_nanoseconds":108000000},"name":"testsensor03","sensors":{"name":"Jane"}}},{"id":"testsensor04","data":{"time":{"_seconds":1587500668,"_nanoseconds":523000000},"sensors":{"sensor":"humidity"},"name":"testsensor04"}},{"id":"testsensor05","data":{"time":{"_seconds":1587501599,"_nanoseconds":589000000},"sensors":{"sensor":"humidity","value":96},"name":"testsensor05"}},{"id":"testsensor06","data":{"sensors":{"sensor":"humidity","value":99},"time":{"_seconds":1587509932,"_nanoseconds":457000000},"name":"testsensor06"}}]%  
+[{"id":"testiot","data":{"sensor":"temperature","value":"75","number":"2020"}}]
 ```
-If you add the id in the HTTP get query (add "?id=testsensor06" into the URL), you can get the data from a specific sensor:
+2. If you add the id in the HTTP get query (add "?id=xxx" into the URL), you can get the data from a specific sensor:
 ```bash
 % curl -X GET 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=cmpe181dev1'
 No such document!
-% curl -X GET 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=testsensor06'
-{"time":{"_seconds":1587509932,"_nanoseconds":457000000},"name":"testsensor06","sensors":{"sensor":"humidity","value":99}}%
+% curl -X GET 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=testsensor02'
+
+{"time":{"_seconds":1615102571,"_nanoseconds":91000000},"name":"testsensor02","sensors":{"value":"99","sensor":"humidity"}}
 ```
+3. Test the POST API, add the sensor data in the data field ('-d') using the json format. This sensor data will be saved into the Firestore.
+```bash
+curl -X POST 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=testsensor03' -H "content-type:application/json" -d '{"bodydata":{"sensor":"humidity","value":"96"}}'
+
+{"name":"testsensor03","sensors":{"sensor":"humidity","value":"96"},"time":"2021-03-07T07:42:47.040Z"}%
+```
+4. Test the PUT API to change the value of the data for a specific sensor
+```bash
+curl -X PUT 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=testsensor02' -H "content-type:application/json" -d '{"bodydata":{"sensor":"humidity","value":"99"}}'
+
+{"name":"testsensor02","sensors":{"sensor":"humidity","value":"99"},"time":"2021-03-07T07:36:11.091Z"}
+```
+5. Test the DELETE API
+```bash
+% curl -X DELETE 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=testsensor03' -H "content-type:application/json”
+             
+Deleted!%   
+```
+
