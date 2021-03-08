@@ -147,7 +147,7 @@ exports.IoTdeviceHTTPApi = async (req, res) => {
             } else {
                 console.log('POST Method, deviceId: ', deviceId || 'noid');
                 const iotcommandOptions = {
-                    deviceId: deviceId || 'noid', 
+                    deviceId: deviceId || 'noid',
                     commandMessage: message,
                     projectId: 'cmpelkk',
                     cloudRegion: 'us-central1',
@@ -181,45 +181,44 @@ const escapeHtml = require('escape-html');
  *                     More info: https://expressjs.com/en/api.html#res
  */
 exports.httpApi = async (req, res) => {
-    console.log('request body-> ', req.body);
     let bodydata;
-    let deviceId;
-    let message;
+    let id;
+    //let message;
+    id = req.query.id;//sensor device id
+    console.log(`Get http query id:, ${id}`);
+    console.log('request body-> ', req.body);
 
     switch (req.get('content-type')) {
-        // '{"deviceId":"testiot1","message":"test message"}'
         case 'application/json':
-            //({ bodydata } = req.body);
-            //console.log("json content", JSON.stringify(bodydata));
+            ({ bodydata } = req.body);
+            console.log("json content jsonstr", JSON.stringify(bodydata));
             console.log("json content", req.body)
             //const {deviceId, message} = req.body;
-            deviceId = req.body.deviceId
-            message = req.body.message
-            console.log("deviceId:", deviceId)
-            console.log("message:", message)
+            // deviceId = req.body.deviceId
+            // message = req.body.message
+            console.log("bodydata:", bodydata)
+            //console.log("message:", message)
             break;
 
         // 'message', stored in a Buffer
         case 'application/octet-stream':
-            message = req.body.toString(); // Convert buffer to a string
+            bodydata = req.body.toString(); // Convert buffer to a string
             break;
 
         // 'message'
         case 'text/plain':
-            message = req.body;
+            bodydata = req.body;
             break;
 
         // 'message=xx' in the body of a POST request (not the URL)
         case 'application/x-www-form-urlencoded':
-            ({ message } = req.body);
+            ({ bodydata } = req.body);
             break;
     }
 
     switch (req.method) {
         case 'GET':
-            deviceId = req.query.id;
-            console.log(`Get http query:, ${deviceId}`);
-            if (!deviceId || deviceId.length === 0) {
+            if (!id || id.length === 0) {
                 //read all data from the firestore
                 const datalist = [];
                 db.collection(dbcollection).get()
@@ -238,7 +237,7 @@ exports.httpApi = async (req, res) => {
                         res.status(405).send('Error getting data');
                     });
             } else {
-                let dbRef = db.collection(dbcollection).doc(deviceId);
+                let dbRef = db.collection(dbcollection).doc(id);
                 let getDoc = dbRef.get()
                     .then(doc => {
                         if (!doc.exists) {
@@ -261,45 +260,29 @@ exports.httpApi = async (req, res) => {
             //res.status(200).send('Get request!');
             break;
         case 'POST':
-            if (!deviceId || deviceId.length === 0) {
+            if (!id || id.length === 0) {
                 console.log('No deviceId')
             } else {
-                console.log('POST Method, deviceId: ', deviceId || 'cmpe181dev1');
-                const iotcommandOptions = {
-                    deviceId: deviceId || 'cmpe181dev1', //'cmpe181dev1',
-                    commandMessage: message,
-                    projectId: 'cmpelkk',
-                    cloudRegion: 'us-central1',
-                    registryId: 'CMPEIoT1'
-                }
-                try {
-                    const response = await sendCommand(iotcommandOptions);
-                    res.status(200).json(response);
-                } catch (err) {
-                    console.error('Publish failed ', err.message);
-                    res.status(400).json({
-                        error: err.message
-                    });
-                }
+                let docRef = db.collection(dbcollection).doc(id);
+                console.log('POST Created doc ref');
+                let setdoc = docRef.set({
+                    name: id,
+                    sensors: bodydata,
+                    time: new Date()
+                });
+                //res.status(200).send(`Post data: ${escapeHtml(bodydata || 'World')}!`);
+                res.status(200).json({
+                    name: id,
+                    sensors: bodydata,
+                    time: new Date()
+                })
             }
 
 
             // sendCommand('cmpe181dev1', 'CMPEIoT1', 'cmpelkk', 'us-central1', 'test command');
             // res.status(200).send('Get Post request, send command!');
 
-            // let docRef = db.collection(dbcollection).doc(id);
-            // console.log('POST Created doc ref');
-            // let setdoc = docRef.set({
-            //     name: id,
-            //     sensors: bodydata,
-            //     time: new Date()
-            // });
-            // //res.status(200).send(`Post data: ${escapeHtml(bodydata || 'World')}!`);
-            // res.status(200).json({
-            //     name: id,
-            //     sensors: bodydata,
-            //     time: new Date()
-            // })
+
             break;
         case 'PUT':
             let docdelRef = db.collection(dbcollection).doc(id);

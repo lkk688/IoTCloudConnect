@@ -108,4 +108,7 @@ curl -X PUT 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=testsenso
              
 Deleted!%   
 ```
-
+For all the above APIs, you can use the '-v' option to see the detailed output, for example
+```bash
+% curl -v -X PUT 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=testsensor02' -H "content-type:application/json" -d '{"bodydata":{"sensor":"humidity","value":"99"}}'
+```
