@@ -9,7 +9,7 @@ Activate the python virtual environment, install the required Python packages ba
 ```
 Use the following code to run the IoT python client to connect to Google Cloud IoT, you need to add your connection parameters in class Args or enable command line argument parsing by uncomment: args = parse_command_line_args()
 ```bash
-python3 pyclient/IoTclient.py
+python3 pyclient/gcpIoTclient.py
 ```
 [CMPE-GoogleIoTdata.ipynb](/Notebook/CMPE-GoogleIoTdata.ipynb) is the Colab file to demonstrate the IoT Python code that publish IoT sensor data to Google Cloud IoT
 
@@ -29,9 +29,9 @@ export GOOGLE_APPLICATION_CREDENTIALS=XXX/certs/cmpelkk-380e31c10ee7.json
 ```bash
 gcloud pubsub subscriptions create projects/cmpelkk/subscriptions/cmpe181dev1-subscription --topic=projects/cmpelkk/topics/cmpeiotdevice1
 ```
-3. Run your IoT client code to send continuous data to the cloud, in another terminal, run the sub.py to receive the realtime data from the IoT client
+3. Run your IoT client code to send continuous data to the cloud, in another terminal, run the [gcpsub.py](/pyclient/gcpsub.py) to receive the realtime data from the IoT client
 ```bash
-python pyclient/sub.py $PROJECT my-subscription
+python pyclient/gcpsub.py $PROJECT my-subscription
 ```
 
 ## Google Cloud Function
