@@ -3,7 +3,7 @@ This sample code implements the IoT client device connection with the cloud, and
 ![Figure](/Resources/Picture1.png)
 
 The advanced version of this project implements the following diagram:
-![Figure](/Resources/diagram.pdf)
+![Figure](/Resources/diagram.png)
 
 ## IoT Python Client
 Activate the python virtual environment, install the required Python packages based on the [requirements](/iotpython/requirements.txt)
