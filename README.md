@@ -118,7 +118,7 @@ For all the above APIs, you can use the '-v' option to see the detailed output, 
 
 # Artificial Intelligent IoT
 ## Cloud Vision API
-[index.js](/gcpnodefunction/index.js) code added the function to test the Google Cloud Vision API, and perform the image labeling and OCR detection.
+[index.js](/gcpnodefunction/index.js) code added the function to test the Google Cloud Vision API, and perform the image labeling, safeSearchDetection, and OCR detection.
 
 ## Tensorflow Lite
 [AIoT](/AIoT) folder added the Tensorflow lite inference code for image classification and object detection.
