@@ -121,4 +121,6 @@ For all the above APIs, you can use the '-v' option to see the detailed output, 
 [index.js](/gcpnodefunction/index.js) code added the function to test the Google Cloud Vision API, and perform the image labeling and OCR detection.
 
 ## Tensorflow Lite
-AIoT folder added the Tensorflow lite inference code for image classification and object detection.
+[AIoT](/AIoT) folder added the Tensorflow lite inference code for image classification and object detection.
+
+The training of the Tensorflow image classification model and the export of the Tensorflow lite model is available in this [Colab](https://colab.research.google.com/drive/1JXgap9RvbgjUrGmpHqPkA9gKNuZalVQQ?usp=sharing) file. The training of the Tensorflow object detection model (SSD) and the export of the Tensorflow lite model and inference is available in this [Colab](https://colab.research.google.com/drive/1QnihxtbE0D2cWd0wzbSQyWvdnpYCdoVs?usp=sharing) file.
