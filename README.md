@@ -115,3 +115,10 @@ For all the above APIs, you can use the '-v' option to see the detailed output, 
 ```bash
 % curl -v -X PUT 'https://us-central1-cmpelkk.cloudfunctions.net/httpApi?id=testsensor02' -H "content-type:application/json" -d '{"bodydata":{"sensor":"humidity","value":"99"}}'
 ```
+
+# Artificial Intelligent IoT
+## Cloud Vision API
+[index.js](/gcpnodefunction/index.js) code added the function to test the Google Cloud Vision API, and perform the image labeling and OCR detection.
+
+## Tensorflow Lite
+AIoT folder added the Tensorflow lite inference code for image classification and object detection.
