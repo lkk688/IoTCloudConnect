@@ -26,6 +26,25 @@ const bigquery = new BigQuery({
 const { PubSub } = require('@google-cloud/pubsub');
 const pubsub = new PubSub();
 
+// Imports the Google Cloud Vision client library
+const vision = require('@google-cloud/vision');
+// Creates a cloud vision client
+const visionclient = new vision.ImageAnnotatorClient();
+async function cloudvisiontest() {
+    // Performs label detection on the image file
+    const [result] = await visionclient.labelDetection('./resources/SF1.jpg');//wakeupcat.jpg
+    const labels = result.labelAnnotations;
+    console.log('Labels:');
+    const resultlist = [];
+    labels.forEach(label => {
+        resultlist.push(label.description);
+        //console.log(label.description);
+    });
+    console.log(resultlist);
+    //return publishResult("ML_RESULT", resultlist);
+}
+cloudvisiontest();
+
 //gcloud pubsub topics publish cmpeiotdevice1 --message "test pubsub"
 /**
  * Background Cloud Function to be triggered by Pub/Sub.
@@ -355,4 +374,103 @@ const sendCommand = async (
         throw new Error('Could not send command');
     }
     // [END iot_send_command]
+};
+
+
+/**
+ * Background Cloud Function to be triggered by Cloud Storage.
+ *
+ * @param {object} data The event payload.
+ * @param {object} context The event metadata.
+ */
+//ref: https://github.com/GoogleCloudPlatform/nodejs-docs-samples/blob/master/functions/helloworld/index.js
+// detect uploaded images that are flagged as Adult or Violence.
+exports.processImagesonGCS = async (data, context) => {
+    const file = data;
+
+    console.log(`  Event: ${context.eventId}`);
+    console.log(`  Event Type: ${context.eventType}`);
+    console.log(`  Bucket: ${file.bucket}`);
+    console.log(`  File: ${file.name}`);
+    console.log(`  Metageneration: ${file.metageneration}`);
+    console.log(`  Created: ${file.timeCreated}`);
+    console.log(`  Updated: ${file.updated}`);
+
+
+    const filePath = `gs://${file.bucket}/${file.name}`;
+    console.log(`Analyzing ${filePath}.`);
+
+    const filestote = storage.bucket(file.bucket).file(file.name);
+    console.log(`Analyzing storage bucket: ${filestote.name}.`);
+
+    try {
+        console.log("Start vision API.")
+        const [result] = await visionclient.safeSearchDetection(filePath);
+        const detections = result.safeSearchAnnotation || {};
+        if (
+            // Levels are defined in https://cloud.google.com/vision/docs/reference/rest/v1/AnnotateImageResponse#likelihood
+            detections.adult === 'VERY_LIKELY' ||
+            detections.violence === 'VERY_LIKELY'
+        ) {
+            console.log(`Detected ${file.name} as inappropriate.`);
+            //return blurImage(file, BLURRED_BUCKET_NAME);
+        } else {
+            console.log(`Detected ${file.name} as OK.`);
+        }
+    } catch (err) {
+        console.error(`Failed to analyze ${file.name}.`, err);
+        throw err;
+    }
+    //return
+};
+
+exports.securehttpApi = async (req, res) => {
+    const id = req.query.id;
+    console.log(`Get http query:, ${id}`);
+    let bodydata = req.body ? req.body : 'nobody';
+    console.log('Get http body:');
+    console.log(bodydata);
+    publishResult("ML_RESULT", "Get body");
+    switch (req.method) {
+        case 'GET':
+            console.log("Get request");
+            publishResult("ML_RESULT", "Get request");
+            res.status(200).send('Get secure request!');
+            break;
+        case 'POST':
+            console.log("Get post");
+            publishResult("ML_RESULT", "Get POST");
+            await detectText('cmpelkk_imagetest', 'sjsu.jpg');
+            res.status(200).send('Get POST request!');
+            break;
+        default:
+            res.status(405).send({ error: 'Something blew up!' });
+            break;
+    }
+}
+
+/**
+ * Publishes the result to the given pubsub topic and returns a Promise.
+ *
+ * @param {string} topicName Name of the topic on which to publish.
+ * @param {object} data The message data to publish.
+ */
+ const publishResult = async (topicName, data) => {
+    const dataBuffer = Buffer.from(JSON.stringify(data));
+    console.log("publishResult");
+    const [topic] = await pubsub.topic(topicName).get({ autoCreate: true });
+    topic.publish(dataBuffer)
+};
+
+const detectText = async (bucketName, filename) => {
+    console.log(`Looking for text in image ${filename}`);
+    const [textDetections] = await visionclient.textDetection(
+        `gs://${bucketName}/${filename}`
+    );
+    const [annotation] = textDetections.textAnnotations;
+    const text = annotation ? annotation.description : '';
+    console.log(`Extracted text from image:`, text);
+
+    return publishResult("ML_RESULT", text);
+
 };
